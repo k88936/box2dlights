@@ -3,7 +3,6 @@ package tests;
 import box2dLight.*;
 import com.badlogic.gdx.ApplicationListener;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.box2d.Box2d;
 import com.badlogic.gdx.box2d.Box2dPlus;
@@ -16,9 +15,13 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.FrameBuffer;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
-import com.badlogic.gdx.math.*;
+import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Matrix4;
+import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
-import com.badlogic.gdx.utils.viewport.FitViewport;
+import com.badlogic.gdx.utils.viewport.ExtendViewport;
+import com.badlogic.gdx.utils.viewport.Viewport;
 
 import java.util.ArrayList;
 
@@ -29,7 +32,7 @@ public class Box2dLightCustomShaderTest extends InputAdapter implements Applicat
     public static final float viewportHeight = 32;
     static final int RAYS_PER_BALL = 64;
     static final int BALLSNUM = 12;
-    static final float LIGHT_DISTANCE = 16f;
+    static final float LIGHT_DISTANCE = 6f;
     static final float RADIUS = 0.5f;
     private final static int MAX_FPS = 30;
     public final static float TIME_STEP = 1f / MAX_FPS;
@@ -37,10 +40,8 @@ public class Box2dLightCustomShaderTest extends InputAdapter implements Applicat
     private final static float MAX_STEPS = 1f + MAX_FPS / MIN_FPS;
     //	TextureRegion textureRegion;
     private final static float MAX_TIME_PER_FRAME = TIME_STEP * MAX_STEPS;
-    private final static int VELOCITY_ITERS = 6;
-    private final static int POSITION_ITERS = 2;
     OrthographicCamera camera;
-    FitViewport viewport;
+    Viewport viewport;
     SpriteBatch batch;
     BitmapFont font;
     /** our box2D world **/
@@ -96,7 +97,7 @@ public class Box2dLightCustomShaderTest extends InputAdapter implements Applicat
         camera = new OrthographicCamera(viewportWidth, viewportHeight);
         camera.update();
 
-        viewport = new FitViewport(viewportWidth, viewportHeight, camera);
+        viewport = new ExtendViewport(viewportWidth, viewportHeight, camera);
 
         batch = new SpriteBatch();
         font = new BitmapFont();
@@ -139,7 +140,7 @@ public class Box2dLightCustomShaderTest extends InputAdapter implements Applicat
             }
         };
         rayHandler.setLightShader(lightShader);
-        rayHandler.setAmbientLight(0.1f, 0.1f, 0.1f, 0.5f);
+        rayHandler.setAmbientLight(0.3f, 0.3f, 0.1f, 0.5f);
         rayHandler.setBlurNum(0);
 
         initPointLights();
@@ -154,7 +155,7 @@ public class Box2dLightCustomShaderTest extends InputAdapter implements Applicat
                 DeferredObject deferredObject = new DeferredObject(objectReg, objectRegN);
                 deferredObject.x = 4 + x * (deferredObject.diffuse.getRegionWidth() * SCALE + 8);
                 deferredObject.y = 4 + y * (deferredObject.diffuse.getRegionHeight() * SCALE + 7);
-                deferredObject.color.set(MathUtils.random(0.5f, 1), MathUtils.random(0.5f, 1), MathUtils.random(0.5f, 1), 1);
+                deferredObject.color.set(1f, 1f, 1f, 1);
                 if (x > 0)
                     deferredObject.rot = true;
                 deferredObject.rotation = MathUtils.random(90);
@@ -235,6 +236,8 @@ public class Box2dLightCustomShaderTest extends InputAdapter implements Applicat
                 + "{\n" //
                 + "   vec2 rad = vec2(-sin(u_rot), cos(u_rot));\n" //
                 + "   v_rot = mat2(rad.y, -rad.x, rad.x, rad.y);\n" //
+//                + "   v_rot = mat2(u_projTrans[0].xy,u_projTrans[1].xy);\n" //
+//                + "   v_rot = mat2(0,-1,1,0);\n" //
                 + "   v_color = " + ShaderProgram.COLOR_ATTRIBUTE + ";\n" //
                 + "   v_color.a = v_color.a * (255.0/254.0);\n" //
                 + "   v_texCoords = " + ShaderProgram.TEXCOORD_ATTRIBUTE + "0;\n" //
@@ -268,11 +271,6 @@ public class Box2dLightCustomShaderTest extends InputAdapter implements Applicat
     @Override
     public void render() {
 
-        /** Rotate directional light like sun :) */
-        if (lightsType == 3) {
-            sunDirection += Gdx.graphics.getDeltaTime() * 4f;
-            lights.get(0).setDirection(sunDirection);
-        }
 
         camera.update();
 
@@ -375,51 +373,27 @@ public class Box2dLightCustomShaderTest extends InputAdapter implements Applicat
         aika += System.nanoTime() - time;
 
         /** FONT */
-            batch.setProjectionMatrix(normalProjection);
-            batch.begin();
+        batch.setProjectionMatrix(normalProjection);
+        batch.begin();
 
-            font.draw(batch,
-                    "F1 - PointLight",
-                    0, Gdx.graphics.getHeight());
-            font.draw(batch,
-                    "F2 - ConeLight",
-                    0, Gdx.graphics.getHeight() - 15);
-            font.draw(batch,
-                    "F3 - ChainLight",
-                    0, Gdx.graphics.getHeight() - 30);
-            font.draw(batch,
-                    "F4 - DirectionalLight",
-                    0, Gdx.graphics.getHeight() - 45);
-            font.draw(batch,
-                    "F5 - random lights colors",
-                    0, Gdx.graphics.getHeight() - 75);
-            font.draw(batch,
-                    "F6 - random lights distance",
-                    0, Gdx.graphics.getHeight() - 90);
-            font.draw(batch,
-                    "F7 - toggle drawing of normals",
-                    0, Gdx.graphics.getHeight() - 105);
-            font.draw(batch,
-                    "F9 - default blending (1.3)",
-                    0, Gdx.graphics.getHeight() - 120);
-            font.draw(batch,
-                    "F10 - over-burn blending (default in 1.2)",
-                    0, Gdx.graphics.getHeight() - 135);
-            font.draw(batch,
-                    "F11 - some other blending",
-                    0, Gdx.graphics.getHeight() - 150);
 
-            font.draw(batch,
-                    "F12 - toggle help text",
-                    0, Gdx.graphics.getHeight() - 180);
+        font.draw(batch,
+                Integer.toString(Gdx.graphics.getFramesPerSecond())
+                        + "mouse at shadows: " + atShadow
+                        + " time used for shadow calculation:"
+                        + aika / ++times + "ns", 0, 20);
 
-            font.draw(batch,
-                    Integer.toString(Gdx.graphics.getFramesPerSecond())
-                            + "mouse at shadows: " + atShadow
-                            + " time used for shadow calculation:"
-                            + aika / ++times + "ns", 0, 20);
+        batch.end();
+    }
 
-            batch.end();
+    @Override
+    public void pause() {
+
+    }
+
+    @Override
+    public void resume() {
+
     }
 
     void clearLights() {
@@ -439,9 +413,8 @@ public class Box2dLightCustomShaderTest extends InputAdapter implements Applicat
                     rayHandler, RAYS_PER_BALL, null, LIGHT_DISTANCE, 0f, 0f);
             light.attachToBody(balls.get(i), RADIUS / 2f, RADIUS / 2f);
             light.setColor(
-                    MathUtils.random(),
-                    MathUtils.random(),
-                    MathUtils.random(),
+                    1f, 1f,
+                    1f,
                     1f);
             lights.add(light);
         }
@@ -537,7 +510,6 @@ public class Box2dLightCustomShaderTest extends InputAdapter implements Applicat
     }
 
 
-
     @Override
     public void dispose() {
         rayHandler.dispose();
@@ -549,94 +521,12 @@ public class Box2dLightCustomShaderTest extends InputAdapter implements Applicat
         normalFbo.dispose();
     }
 
-    @Override
-    public boolean keyDown(int keycode) {
-        switch (keycode) {
-
-            case Input.Keys.F1:
-                if (lightsType != 0) {
-                    initPointLights();
-                    lightsType = 0;
-                }
-                return true;
-
-            case Input.Keys.F2:
-                if (lightsType != 1) {
-                    initConeLights();
-                    lightsType = 1;
-                }
-                return true;
-
-
-
-            case Input.Keys.F4:
-                if (lightsType != 3) {
-                    initDirectionalLight();
-                    lightsType = 3;
-                }
-                return true;
-
-            case Input.Keys.F5:
-                for (Light light : lights)
-                    light.setColor(
-                            MathUtils.random(),
-                            MathUtils.random(),
-                            MathUtils.random(),
-                            1f);
-                return true;
-
-            case Input.Keys.F6:
-                for (Light light : lights)
-                    light.setDistance(MathUtils.random(LIGHT_DISTANCE * 0.5f, LIGHT_DISTANCE * 2f));
-                return true;
-
-            case Input.Keys.F7:
-                drawNormals = !drawNormals;
-                return true;
-
-            case Input.Keys.F9:
-                rayHandler.diffuseBlendFunc.reset();
-                return true;
-
-            case Input.Keys.F10:
-                rayHandler.diffuseBlendFunc.set(
-                        GL20.GL_DST_COLOR, GL20.GL_SRC_COLOR);
-                return true;
-
-            case Input.Keys.F11:
-                rayHandler.diffuseBlendFunc.set(
-                        GL20.GL_SRC_COLOR, GL20.GL_DST_COLOR);
-                return true;
-
-            case Input.Keys.F12:
-                showText = !showText;
-                return true;
-
-            default:
-                return false;
-
-        }
-    }
-
-    @Override
-    public boolean mouseMoved(int x, int y) {
-        testPoint.set(x, y, 0);
-        camera.unproject(testPoint);
-        return false;
-    }
-
-    @Override
-    public void pause() {
-    }
 
     @Override
     public void resize(int width, int height) {
         viewport.update(width, height, true);
     }
 
-    @Override
-    public void resume() {
-    }
 
     private static class DeferredObject {
         TextureRegion diffuse;

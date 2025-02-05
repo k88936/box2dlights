@@ -25,23 +25,6 @@ ext {
         return project.hasProperty("RELEASE")
     }
 
-    getReleaseRepositoryUrl = {
-        return project.hasProperty('RELEASE_REPOSITORY_URL') ? RELEASE_REPOSITORY_URL
-                : "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
-    }
-
-    getSnapshotRepositoryUrl = {
-        return project.hasProperty('SNAPSHOT_REPOSITORY_URL') ? SNAPSHOT_REPOSITORY_URL
-                : "https://oss.sonatype.org/content/repositories/snapshots/"
-    }
-
-    getRepositoryUsername = {
-        return project.hasProperty('NEXUS_USERNAME') ? NEXUS_USERNAME : ""
-    }
-
-    getRepositoryPassword = {
-        return project.hasProperty('NEXUS_PASSWORD') ? NEXUS_PASSWORD : ""
-    }
 }
 
 version project.getProperty('version') + (isReleaseBuild() ? "" : "-SNAPSHOT")
@@ -67,7 +50,7 @@ repositories {
         url = "https://maven.pkg.github.com/k88936/gdx-box2d"
         credentials {
             username = 'k88936'
-            password = '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'
+            password = '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'
         }
     }
 
