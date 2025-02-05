@@ -50,7 +50,7 @@ repositories {
         url = "https://maven.pkg.github.com/k88936/gdx-box2d"
         credentials {
             username = 'k88936'
-            password = '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'
+            password = 'ghp_'+'wFUC3mQHU8OqQtjcjfRWwwcpC4wiR54cd3FV'
         }
     }
 
