@@ -521,11 +521,7 @@ public class Box2dLightTest2 extends InputAdapter implements ApplicationListener
 		return false;
 	}
 
-	@Override
-	public boolean scrolled(int amount) {
-		camera.rotate((float) amount * 3f, 0, 0, 1);
-		return false;
-	}
+
 
 	@Override
 	public void pause() {
