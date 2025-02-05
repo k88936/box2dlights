@@ -9,7 +9,7 @@ public class DesktopLauncher {
 	public static void main(String[] argv) {
 		Lwjgl3ApplicationConfiguration config = new Lwjgl3ApplicationConfiguration();
 		config.setTitle("box2d lights test");
-		new Lwjgl3Application(new Box2dLightTest2(), config);
+		new Lwjgl3Application(new SimpleTest(), config);
 	}
 
 }

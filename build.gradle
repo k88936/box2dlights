@@ -1,76 +1,101 @@
 plugins {
-	id 'java-library'
+    id 'java-library'
 }
 
 sourceSets {
-	main {
-		java {
-			srcDirs = ["src"]
-		}
-		resources {
-			srcDirs = ["res"]
-		}
-	}
-	test {
-		java {
-			srcDirs = ["test"]
-		}
-	}
+    main {
+        java {
+            srcDirs = ["src"]
+        }
+        resources {
+            srcDirs = ["res"]
+        }
+    }
+    test {
+        java {
+            srcDirs = ["test"]
+        }
+    }
 }
 
 ext {
-	gdxVersion = "1.13.1"
+    gdxVersion = "1.13.1"
 
-	isReleaseBuild = {
-		return project.hasProperty("RELEASE")
-	}
+    isReleaseBuild = {
+        return project.hasProperty("RELEASE")
+    }
 
-	getReleaseRepositoryUrl = {
-		return project.hasProperty('RELEASE_REPOSITORY_URL') ? RELEASE_REPOSITORY_URL
-				: "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
-	}
+    getReleaseRepositoryUrl = {
+        return project.hasProperty('RELEASE_REPOSITORY_URL') ? RELEASE_REPOSITORY_URL
+                : "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
+    }
 
-	getSnapshotRepositoryUrl = {
-		return project.hasProperty('SNAPSHOT_REPOSITORY_URL') ? SNAPSHOT_REPOSITORY_URL
-				: "https://oss.sonatype.org/content/repositories/snapshots/"
-	}
+    getSnapshotRepositoryUrl = {
+        return project.hasProperty('SNAPSHOT_REPOSITORY_URL') ? SNAPSHOT_REPOSITORY_URL
+                : "https://oss.sonatype.org/content/repositories/snapshots/"
+    }
 
-	getRepositoryUsername = {
-		return project.hasProperty('NEXUS_USERNAME') ? NEXUS_USERNAME : ""
-	}
+    getRepositoryUsername = {
+        return project.hasProperty('NEXUS_USERNAME') ? NEXUS_USERNAME : ""
+    }
 
-	getRepositoryPassword = {
-		return project.hasProperty('NEXUS_PASSWORD') ? NEXUS_PASSWORD : ""
-	}
+    getRepositoryPassword = {
+        return project.hasProperty('NEXUS_PASSWORD') ? NEXUS_PASSWORD : ""
+    }
 }
 
 version project.getProperty('version') + (isReleaseBuild() ? "" : "-SNAPSHOT")
 
 java {
+//    sourceCompatibility = 1.7
+//    targetCompatibility = 1.7
 
-	withJavadocJar()
-	withSourcesJar()
+    withJavadocJar()
+    withSourcesJar()
 }
 
 repositories {
-	mavenLocal()
-	mavenCentral()
+    mavenLocal()
+    mavenCentral()
+    maven {
+        url = uri("https://oss.sonatype.org/content/repositories/snapshots/")
+        mavenContent {
+            snapshotsOnly()
+        }
+    }
+    maven {
+        url = "https://maven.pkg.github.com/k88936/gdx-box2d"
+        credentials {
+            username = 'k88936'
+            password = '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'
+        }
+    }
+
 }
 
 tasks.withType(JavaCompile).configureEach {
-	options.encoding = 'UTF-8'
+    options.encoding = 'UTF-8'
 }
 
 tasks.withType(Test).configureEach {
-	systemProperty 'file.encoding', 'UTF-8'
+    systemProperty 'file.encoding', 'UTF-8'
 }
 
 dependencies {
-	implementation "com.badlogicgames.gdx:gdx:$gdxVersion"
-	implementation "com.badlogicgames.gdx:gdx-box2d:$gdxVersion"
-	testImplementation "com.badlogicgames.gdx:gdx-box2d-platform:$gdxVersion:natives-desktop"
-	testImplementation "com.badlogicgames.gdx:gdx-backend-lwjgl3:$gdxVersion"
-	testImplementation "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop"
+    implementation "com.badlogicgames.gdx:gdx:$gdxVersion"
+    implementation "com.badlogicgames.gdx:gdx-box2d:$gdx_box2d_Version"
+    implementation "com.badlogicgames.gdx:gdx-box2d-utils:$gdx_box2d_Version"
+    testImplementation "com.badlogicgames.gdx:gdx-box2d-platform:$gdx_box2d_Version:natives-desktop"
+    testImplementation "com.badlogicgames.gdx:gdx-backend-lwjgl3:$gdxVersion"
+    testImplementation "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop"
 }
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}
+
+tasks.withType(Test).configureEach {
+    systemProperty 'file.encoding', 'UTF-8'
+}
+
 
 apply from: rootProject.file('publish.gradle')

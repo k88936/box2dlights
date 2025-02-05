@@ -1,5 +1,8 @@
 package box2dLight;
 
+import com.badlogic.gdx.box2d.structs.*;
+import com.badlogic.gdx.box2d.enums.*;
+import com.badlogic.gdx.box2d.Box2d;
 import shaders.LightShader;
 
 import com.badlogic.gdx.Gdx;
@@ -11,7 +14,6 @@ import com.badlogic.gdx.graphics.glutils.FrameBuffer;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Matrix4;
-import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Disposable;
 
@@ -106,7 +108,7 @@ public class RayHandler implements Disposable {
 	/** camera matrix corners */
 	float x1, x2, y1, y2;
 
-	World world;
+	b2WorldId world;
 	
 	/**
 	 * Class constructor specifying the physics world from where collision
@@ -124,14 +126,14 @@ public class RayHandler implements Disposable {
 	 *     <li>ambientLight = 0f
 	 * </ul>
 	 * 
-	 * @see #RayHandler(World, int, int, RayHandlerOptions)
+	 * @see #RayHandler(b2WorldId, int, int, RayHandlerOptions)
 	 */
-	public RayHandler(World world) {
+	public RayHandler(b2WorldId world) {
 		this(world, Gdx.graphics.getWidth() / 4, Gdx.graphics
 				.getHeight() / 4, null);
 	}
 
-	public RayHandler(World world, RayHandlerOptions options) {
+	public RayHandler(b2WorldId world, RayHandlerOptions options) {
 		this(world, Gdx.graphics.getWidth() / 4, Gdx.graphics
 				.getHeight() / 4, options);
 	}
@@ -140,13 +142,13 @@ public class RayHandler implements Disposable {
 	 * Class constructor specifying the physics world from where collision
 	 * geometry is taken, and size of FBO used for intermediate rendering.
 	 * 
-	 * @see #RayHandler(World)
+	 * @see #RayHandler(b2WorldId)
 	 */
-	public RayHandler(World world, int fboWidth, int fboHeight) {
+	public RayHandler(b2WorldId world, int fboWidth, int fboHeight) {
 		this(world, fboWidth, fboHeight, null);
 	}
 
-	public RayHandler(World world, int fboWidth, int fboHeight, RayHandlerOptions options) {
+	public RayHandler(b2WorldId world, int fboWidth, int fboHeight, RayHandlerOptions options) {
 		this.world = world;
 
 		if (options != null) {
@@ -603,7 +605,7 @@ public class RayHandler implements Disposable {
 	/**
 	 * Sets physics world to work with for this rayHandler
 	 */
-	public void setWorld(World world) {
+	public void setWorld(b2WorldId world) {
 		this.world = world;
 	}
 

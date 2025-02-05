@@ -1,8 +1,11 @@
 package box2dLight;
 
-import com.badlogic.gdx.physics.box2d.Fixture;
+import com.badlogic.gdx.box2d.Box2dPlus;
+import com.badlogic.gdx.box2d.structs.*;
 
 public class LightData {
+
+	static final Box2dPlus.BodyUserDataMapper<b2ShapeId,LightData> mapper =new Box2dPlus.BodyUserDataMapper<>();
 
 	public Object userData = null;
 
@@ -44,13 +47,6 @@ public class LightData {
 		return l > 0 ? l : 0f;
 	}
 
-	public static Object getUserData (Fixture fixture) {
-		Object data = fixture.getUserData();
-		if (data instanceof LightData) {
-			return ((LightData) data).userData;
-		} else {
-			return data;
-		}
-	}
+
 
 }

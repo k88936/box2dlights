@@ -5,6 +5,10 @@ import com.badlogic.gdx.ApplicationListener;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputAdapter;
+import com.badlogic.gdx.box2d.Box2d;
+import com.badlogic.gdx.box2d.Box2dPlus;
+import com.badlogic.gdx.box2d.enums.b2BodyType;
+import com.badlogic.gdx.box2d.structs.*;
 import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
@@ -12,14 +16,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.FrameBuffer;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
-import com.badlogic.gdx.math.MathUtils;
-import com.badlogic.gdx.math.Matrix4;
-import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.math.Vector3;
-import com.badlogic.gdx.physics.box2d.*;
-import com.badlogic.gdx.physics.box2d.BodyDef.BodyType;
-import com.badlogic.gdx.physics.box2d.joints.MouseJoint;
-import com.badlogic.gdx.physics.box2d.joints.MouseJointDef;
+import com.badlogic.gdx.math.*;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 
@@ -31,14 +28,14 @@ public class Box2dLightCustomShaderTest extends InputAdapter implements Applicat
     public static final float viewportWidth = 48;
     public static final float viewportHeight = 32;
     static final int RAYS_PER_BALL = 64;
-    static final int BALLSNUM = 8;
+    static final int BALLSNUM = 12;
     static final float LIGHT_DISTANCE = 16f;
-    static final float RADIUS = 1f;
+    static final float RADIUS = 0.5f;
     private final static int MAX_FPS = 30;
     public final static float TIME_STEP = 1f / MAX_FPS;
     private final static int MIN_FPS = 15;
     private final static float MAX_STEPS = 1f + MAX_FPS / MIN_FPS;
-//	TextureRegion textureRegion;
+    //	TextureRegion textureRegion;
     private final static float MAX_TIME_PER_FRAME = TIME_STEP * MAX_STEPS;
     private final static int VELOCITY_ITERS = 6;
     private final static int POSITION_ITERS = 2;
@@ -47,19 +44,16 @@ public class Box2dLightCustomShaderTest extends InputAdapter implements Applicat
     SpriteBatch batch;
     BitmapFont font;
     /** our box2D world **/
-    World world;
+    b2WorldId world;
     /** our boxes **/
-    ArrayList<Body> balls = new ArrayList<Body>(BALLSNUM);
+    ArrayList<b2BodyId> balls = new ArrayList<b2BodyId>(BALLSNUM);
     /** our ground box **/
-    Body groundBody;
-    /** our mouse joint **/
-    MouseJoint mouseJoint = null;
-    /** a hit body **/
-    Body hitBody = null;
+    b2BodyId groundBody;
     /** pixel perfect projection for font rendering */
     Matrix4 normalProjection = new Matrix4();
     boolean showText = true;
     /** BOX2D LIGHT STUFF */
+    Vector3 testPoint = new Vector3();
     RayHandler rayHandler;
     ArrayList<Light> lights = new ArrayList<Light>(BALLSNUM);
     float sunDirection = -90f;
@@ -79,20 +73,7 @@ public class Box2dLightCustomShaderTest extends InputAdapter implements Applicat
      * we instantiate this vector and the callback here so we don't irritate the
      * GC
      **/
-    Vector3 testPoint = new Vector3();
-    QueryCallback callback = new QueryCallback() {
-        @Override
-        public boolean reportFixture(Fixture fixture) {
-            if (fixture.getBody() == groundBody)
-                return true;
 
-            if (fixture.testPoint(testPoint.x, testPoint.y)) {
-                hitBody = fixture.getBody();
-                return false;
-            } else
-                return true;
-        }
-    };
     /** another temporary vector **/
     Vector2 target = new Vector2();
     /**
@@ -324,9 +305,10 @@ public class Box2dLightCustomShaderTest extends InputAdapter implements Applicat
             batch.flush();
         }
         for (int i = 0; i < BALLSNUM; i++) {
-            Body ball = balls.get(i);
-            Vector2 position = ball.getPosition();
-            float angle = MathUtils.radiansToDegrees * ball.getAngle();
+            b2BodyId ball = balls.get(i);
+            Vector2 position = Box2dPlus.b2ToGDX(Box2d.b2Body_GetPosition(ball), new Vector2());
+            b2Rot rot = Box2d.b2Body_GetRotation(ball);
+            float angle = MathUtils.atan2Deg(rot.s(), rot.c());
             marble.x = position.x - RADIUS;
             marble.y = position.y - RADIUS;
             marble.rotation = angle;
@@ -365,9 +347,10 @@ public class Box2dLightCustomShaderTest extends InputAdapter implements Applicat
                 deferredObject.draw(batch);
             }
             for (int i = 0; i < BALLSNUM; i++) {
-                Body ball = balls.get(i);
-                Vector2 position = ball.getPosition();
-                float angle = MathUtils.radiansToDegrees * ball.getAngle();
+                b2BodyId ball = balls.get(i);
+                Vector2 position = Box2dPlus.b2ToGDX(Box2d.b2Body_GetPosition(ball), new Vector2());
+                b2Rot rot = Box2d.b2Body_GetRotation(ball);
+                float angle = MathUtils.atan2Deg(rot.s(), rot.c());
                 marble.x = position.x - RADIUS;
                 marble.y = position.y - RADIUS;
                 marble.rotation = angle;
@@ -392,7 +375,6 @@ public class Box2dLightCustomShaderTest extends InputAdapter implements Applicat
         aika += System.nanoTime() - time;
 
         /** FONT */
-        if (showText) {
             batch.setProjectionMatrix(normalProjection);
             batch.begin();
 
@@ -438,7 +420,6 @@ public class Box2dLightCustomShaderTest extends InputAdapter implements Applicat
                             + aika / ++times + "ns", 0, 20);
 
             batch.end();
-        }
     }
 
     void clearLights() {
@@ -448,7 +429,7 @@ public class Box2dLightCustomShaderTest extends InputAdapter implements Applicat
             }
             lights.clear();
         }
-        groundBody.setActive(true);
+//        groundBody.setActive(true);
     }
 
     void initPointLights() {
@@ -484,28 +465,11 @@ public class Box2dLightCustomShaderTest extends InputAdapter implements Applicat
         }
     }
 
-    void initChainLights() {
-        clearLights();
-        for (int i = 0; i < BALLSNUM; i++) {
-            ChainLight light = new ChainLight(
-                    rayHandler, RAYS_PER_BALL, null, LIGHT_DISTANCE, 1,
-                    new float[]{-5, 0, 0, 3, 5, 0});
-            light.attachToBody(
-                    balls.get(i),
-                    MathUtils.random(0f, 360f));
-            light.setColor(
-                    MathUtils.random(),
-                    MathUtils.random(),
-                    MathUtils.random(),
-                    1f);
-            lights.add(light);
-        }
-    }
 
     void initDirectionalLight() {
         clearLights();
 
-        groundBody.setActive(false);
+//        groundBody.setActive(false);
         sunDirection = MathUtils.random(0f, 360f);
 
         DirectionalLight light = new DirectionalLight(
@@ -520,7 +484,7 @@ public class Box2dLightCustomShaderTest extends InputAdapter implements Applicat
 
         boolean stepped = false;
         while (physicsTimeLeft >= TIME_STEP) {
-            world.step(TIME_STEP, VELOCITY_ITERS, POSITION_ITERS);
+            Box2d.b2World_Step(world, TIME_STEP, 4);
             physicsTimeLeft -= TIME_STEP;
             stepped = true;
         }
@@ -529,106 +493,56 @@ public class Box2dLightCustomShaderTest extends InputAdapter implements Applicat
 
     private void createPhysicsWorld() {
 
-        world = new World(new Vector2(0, 0), true);
+        b2WorldDef def = Box2d.b2DefaultWorldDef();
+        def.gravity().y(0);
+        world = Box2d.b2CreateWorld(def.asPointer());
 
-        float halfWidth = viewportWidth / 2f;
-        ChainShape chainShape = new ChainShape();
-        chainShape.createLoop(new Vector2[]{
-                new Vector2(0, 0f),
-                new Vector2(viewportWidth, 0f),
-                new Vector2(viewportWidth, viewportHeight),
-                new Vector2(0, viewportHeight)});
-        BodyDef chainBodyDef = new BodyDef();
-        chainBodyDef.type = BodyType.StaticBody;
-        groundBody = world.createBody(chainBodyDef);
-        groundBody.createFixture(chainShape, 0);
-        chainShape.dispose();
+//        float halfWidth = viewportWidth / 2f;
+//        ChainShape chainShape = new ChainShape();
+//        chainShape.createLoop(new Vector2[]{
+//                new Vector2(0, 0f),
+//                new Vector2(viewportWidth, 0f),
+//                new Vector2(viewportWidth, viewportHeight),
+//                new Vector2(0, viewportHeight)});
+//        BodyDef chainBodyDef = new BodyDef();
+//        chainBodyDef.type = BodyType.StaticBody;
+//        groundBody = world.createBody(chainBodyDef);
+//        groundBody.createFixture(chainShape, 0);
+//        chainShape.dispose();
         createBoxes();
 
     }
 
     private void createBoxes() {
-        CircleShape ballShape = new CircleShape();
-        ballShape.setRadius(RADIUS);
+        b2ShapeDef shape = Box2d.b2DefaultShapeDef();
 
-        FixtureDef def = new FixtureDef();
-        def.restitution = 0.9f;
-        def.friction = 0.01f;
-        def.shape = ballShape;
-        def.density = 1f;
-        BodyDef boxBodyDef = new BodyDef();
-        boxBodyDef.type = BodyType.DynamicBody;
+        b2BodyDef bdef = Box2d.b2DefaultBodyDef();
+
+        b2Circle cir = new b2Circle();
+        cir.radius(RADIUS);
+        bdef.type(b2BodyType.b2_dynamicBody);
 
         for (int i = 0; i < BALLSNUM; i++) {
             // Create the BodyDef, set a random position above the
             // ground and create a new body
-            boxBodyDef.position.x = 1 + (float) (Math.random() * (viewportWidth - 2));
-            boxBodyDef.position.y = 1 + (float) (Math.random() * (viewportHeight - 2));
-            Body boxBody = world.createBody(boxBodyDef);
-            boxBody.createFixture(def);
-            boxBody.setFixedRotation(true);
-            balls.add(boxBody);
+            bdef.position().x(1 + (float) (Math.random() * (viewportWidth - 2)));
+            bdef.position().y((1 + (float) (Math.random() * (viewportHeight - 2))));
+            bdef.linearVelocity().x(MathUtils.random(1));
+            bdef.linearVelocity().y(MathUtils.random(1));
+            b2BodyId id = Box2d.b2CreateBody(world, bdef.asPointer());
+            balls.add(id);
+            Box2d.b2CreateCircleShape(id, shape.asPointer(), cir.asPointer());
         }
-        ballShape.dispose();
+//        Box2dPlus.b2CreateBlock(world,new Affine2().translate(24,24),0.5f);
     }
 
-    @Override
-    public boolean touchDown(int x, int y, int pointer, int newParam) {
-        // translate the mouse coordinates to world coordinates
-        testPoint.set(x, y, 0);
-        camera.unproject(testPoint);
 
-        // ask the world which bodies are within the given
-        // bounding box around the mouse pointer
-        hitBody = null;
-        world.QueryAABB(callback, testPoint.x - 0.1f, testPoint.y - 0.1f,
-                testPoint.x + 0.1f, testPoint.y + 0.1f);
-
-        // if we hit something we create a new mouse joint
-        // and attach it to the hit body.
-        if (hitBody != null) {
-            MouseJointDef def = new MouseJointDef();
-            def.bodyA = groundBody;
-            def.bodyB = hitBody;
-            def.collideConnected = true;
-            def.target.set(testPoint.x, testPoint.y);
-            def.maxForce = 1000.0f * hitBody.getMass();
-
-            mouseJoint = (MouseJoint) world.createJoint(def);
-            hitBody.setAwake(true);
-        }
-
-        return false;
-    }
-
-    @Override
-    public boolean touchDragged(int x, int y, int pointer) {
-        camera.unproject(testPoint.set(x, y, 0));
-        target.set(testPoint.x, testPoint.y);
-        // if a mouse joint exists we simply update
-        // the target of the joint based on the new
-        // mouse coordinates
-        if (mouseJoint != null) {
-            mouseJoint.setTarget(target);
-        }
-        return false;
-    }
-
-    @Override
-    public boolean touchUp(int x, int y, int pointer, int button) {
-        // if a mouse joint exists we simply destroy it
-        if (mouseJoint != null) {
-            world.destroyJoint(mouseJoint);
-            mouseJoint = null;
-        }
-        return false;
-    }
 
     @Override
     public void dispose() {
         rayHandler.dispose();
-        world.dispose();
 
+        Box2d.b2DestroyWorld(world);
         objectReg.getTexture().dispose();
         objectRegN.getTexture().dispose();
 
@@ -653,12 +567,7 @@ public class Box2dLightCustomShaderTest extends InputAdapter implements Applicat
                 }
                 return true;
 
-            case Input.Keys.F3:
-                if (lightsType != 2) {
-                    initChainLights();
-                    lightsType = 2;
-                }
-                return true;
+
 
             case Input.Keys.F4:
                 if (lightsType != 3) {
