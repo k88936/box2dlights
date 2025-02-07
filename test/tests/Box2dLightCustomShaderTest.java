@@ -20,8 +20,11 @@ import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
+import shaders.LightShaderWithNormal;
+import shaders.NormalShader;
 
 import java.util.ArrayList;
 
@@ -119,9 +122,9 @@ public class Box2dLightCustomShaderTest extends InputAdapter implements Applicat
         normalProjection.setToOrtho2D(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 
         /** BOX2D LIGHT STUFF BEGIN */
-        normalShader = createNormalShader();
+        normalShader = NormalShader.createNormalShader();
 
-        lightShader = createLightShader();
+        lightShader = LightShaderWithNormal.createLightShader();
         RayHandlerOptions options = new RayHandlerOptions();
         options.setDiffuse(true);
         options.setGammaCorrection(true);
@@ -137,6 +140,7 @@ public class Box2dLightCustomShaderTest extends InputAdapter implements Applicat
                 float y = (light.getY()) / viewportHeight;
                 lightShader.setUniformf("u_lightpos", x, y, 0.05f);
                 lightShader.setUniformf("u_intensity", 5);
+                lightShader.setUniformf("u_falloff",0,0,1);
             }
         };
         rayHandler.setLightShader(lightShader);
@@ -144,7 +148,7 @@ public class Box2dLightCustomShaderTest extends InputAdapter implements Applicat
         rayHandler.setBlurNum(0);
 
 //        initPointLights();
-        new PointLight(rayHandler, 32, Color.WHITE, 24, 40, 8);
+        new PointLight(rayHandler, 128, Color.WHITE, 24, 16, 16);
         /** BOX2D LIGHT STUFF END */
 
 
@@ -167,107 +171,6 @@ public class Box2dLightCustomShaderTest extends InputAdapter implements Applicat
         normalFbo = new FrameBuffer(Pixmap.Format.RGB565, Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), false);
     }
 
-    private ShaderProgram createLightShader() {
-        // Shader adapted from https://github.com/mattdesl/lwjgl-basics/wiki/ShaderLesson6
-        final String vertexShader =
-                "#version 330 core\n" +
-                        "attribute vec4 vertex_positions;\n" //
-                        + "attribute vec4 quad_colors;\n" //
-                        + "attribute float s;\n"
-                        + "uniform mat4 u_projTrans;\n" //
-                        + "varying vec4 v_color;\n" //
-                        + "void main()\n" //
-                        + "{\n" //
-                        + "   v_color = s * quad_colors;\n" //
-                        + "   gl_Position =  u_projTrans * vertex_positions;\n" //
-                        + "}\n";
-        final String fragmentShader = "#version 330 core\n" +
-                "#ifdef GL_ES\n" //
-                + "precision lowp float;\n" //
-                + "#define MED mediump\n"
-                + "#else\n"
-                + "#define MED \n"
-                + "#endif\n" //
-                + "varying vec4 v_color;\n" //
-                + "uniform sampler2D u_normals;\n" //
-                + "uniform vec3 u_lightpos;\n" //
-                + "uniform vec2 u_resolution;\n" //
-                + "uniform float u_intensity = 1.0;\n" //
-                + "void main()\n"//
-                + "{\n"
-                + "  vec2 screenPos = gl_FragCoord.xy / u_resolution.xy;\n"
-                + "  vec3 NormalMap = texture2D(u_normals, screenPos).rgb; "
-                + "  vec3 LightDir = vec3(u_lightpos.xy - screenPos, u_lightpos.z);\n"
-
-                + "  vec3 N = normalize(NormalMap * 2.0 - 1.0);\n"
-
-                + "  vec3 L = normalize(LightDir);\n"
-
-                + "  float maxProd = max(dot(N, L), 0.0);\n"
-                + "" //
-                + "  gl_FragColor = v_color * maxProd * u_intensity;\n" //
-                + "}";
-
-        ShaderProgram.pedantic = false;
-        ShaderProgram lightShader = new ShaderProgram(vertexShader,
-                fragmentShader);
-        if (!lightShader.isCompiled()) {
-            Gdx.app.log("ERROR", lightShader.getLog());
-        }
-
-        lightShader.begin();
-        lightShader.setUniformi("u_normals", 1);
-        lightShader.setUniformf("u_resolution", Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-        lightShader.end();
-
-        return lightShader;
-    }
-
-    private ShaderProgram createNormalShader() {
-        String vertexShader = "attribute vec4 " + ShaderProgram.POSITION_ATTRIBUTE + ";\n" //
-                + "attribute vec4 " + ShaderProgram.COLOR_ATTRIBUTE + ";\n" //
-                + "attribute vec2 " + ShaderProgram.TEXCOORD_ATTRIBUTE + "0;\n" //
-                + "uniform mat4 u_projTrans;\n" //
-                + "uniform float u_rot;\n" //
-                + "varying vec4 v_color;\n" //
-                + "varying vec2 v_texCoords;\n" //
-                + "varying mat2 v_rot;\n" //
-                + "\n" //
-                + "void main()\n" //
-                + "{\n" //
-                + "   vec2 rad = vec2(-sin(u_rot), cos(u_rot));\n" //
-                + "   v_rot = mat2(rad.y, -rad.x, rad.x, rad.y);\n" //
-//                + "   v_rot = mat2(u_projTrans[0].xy,u_projTrans[1].xy);\n" //
-//                + "   v_rot = mat2(0,-1,1,0);\n" //
-                + "   v_color = " + ShaderProgram.COLOR_ATTRIBUTE + ";\n" //
-                + "   v_color.a = v_color.a * (255.0/254.0);\n" //
-                + "   v_texCoords = " + ShaderProgram.TEXCOORD_ATTRIBUTE + "0;\n" //
-                + "   gl_Position =  u_projTrans * " + ShaderProgram.POSITION_ATTRIBUTE + ";\n" //
-                + "}\n";
-        String fragmentShader = "#ifdef GL_ES\n" //
-                + "#define LOWP lowp\n" //
-                + "precision mediump float;\n" //
-                + "#else\n" //
-                + "#define LOWP \n" //
-                + "#endif\n" //
-                + "varying LOWP vec4 v_color;\n" //
-                + "varying vec2 v_texCoords;\n" //
-                + "varying mat2 v_rot;\n" //
-                + "uniform sampler2D u_texture;\n" //
-                + "void main()\n"//
-                + "{\n" //
-                + "  vec4 normal = texture2D(u_texture, v_texCoords).rgba;\n" //
-                // got to translate normal vector to -1, 1 range
-                + "  vec2 rotated = v_rot * (normal.xy * 2.0 - 1.0);\n" //
-                // and back to 0, 1
-                + "  rotated = (rotated.xy / 2.0 + 0.5 );\n" //
-                + "  gl_FragColor = vec4(rotated.xy, normal.z, normal.a);\n" //
-                + "}";
-
-        ShaderProgram shader = new ShaderProgram(vertexShader, fragmentShader);
-        if (!shader.isCompiled()) throw new IllegalArgumentException("Error compiling shader: " + shader.getLog());
-        return shader;
-    }
 
     @Override
     public void render() {
@@ -284,10 +187,11 @@ public class Box2dLightCustomShaderTest extends InputAdapter implements Applicat
             deferredObject.update();
         }
         normalFbo.begin();
+        ScreenUtils.clear(0,0,0,0);
         batch.disableBlending();
         batch.begin();
         batch.setShader(normalShader);
-        normalShader.setUniformf("u_rot", 0f);
+        normalShader.setUniformf("u_rot", 1f,0);
         float bgWidth = bgN.getWidth() * SCALE;
         float bgHeight = bgN.getHeight() * SCALE;
         for (int x = 0; x < 6; x++) {
@@ -297,7 +201,7 @@ public class Box2dLightCustomShaderTest extends InputAdapter implements Applicat
         }
         batch.enableBlending();
         for (DeferredObject deferredObject : assetArray) {
-            normalShader.setUniformf("u_rot", MathUtils.degreesToRadians * deferredObject.rotation);
+            normalShader.setUniformf("u_rot", MathUtils.cosDeg(deferredObject.rotation),MathUtils.sinDeg(deferredObject.rotation));
             deferredObject.drawNormal(batch);
             // flush batch or uniform wont change
             // TODO this is baaaad, maybe modify SpriteBatch to add rotation in the attributes? Flushing after each defeats the point of batch

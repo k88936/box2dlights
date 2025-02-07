@@ -1,11 +1,15 @@
 package shaders;
 
+import box2dLight.RayHandler;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 
 public final class LightShaderWithNormal {
     public static ShaderProgram createLightShader() {
         // Shader adapted from https://github.com/mattdesl/lwjgl-basics/wiki/ShaderLesson6
+        String gamma = "";
+        if (RayHandler.getGammaCorrection())
+            gamma = "sqrt";
         final String vertexShader =
                 "#version 330 core\n" +
                         "attribute vec4 vertex_positions;\n" //
@@ -30,19 +34,23 @@ public final class LightShaderWithNormal {
                 + "uniform vec3 u_lightpos;\n" //
                 + "uniform vec2 u_resolution;\n" //
                 + "uniform float u_intensity = 1.0;\n" //
+             + "uniform vec3 u_falloff;"
                 + "void main()\n"//
-                + "{\n"
+                + "{\n" //
                 + "  vec2 screenPos = gl_FragCoord.xy / u_resolution.xy;\n"
-                + "  vec3 NormalMap = texture2D(u_normals, screenPos).rgb; "
+                + "  vec4 NormalMapTexture = texture2D(u_normals, screenPos);\n"
+                + "  vec3 NormalMap = NormalMapTexture.rgb;\n"
+                + "  float alpha = NormalMapTexture.a;\n"
                 + "  vec3 LightDir = vec3(u_lightpos.xy - screenPos, u_lightpos.z);\n"
 
+                + "  LightDir.x *= u_resolution.x / u_resolution.y;\n"
+                + "  float D = length(LightDir);\n"
+                + "  float Attenuation = 1.0 / (u_falloff.x + (u_falloff.y*D) + (u_falloff.z*D*D));\n"
+
                 + "  vec3 N = normalize(NormalMap * 2.0 - 1.0);\n"
-
                 + "  vec3 L = normalize(LightDir);\n"
-
-                + "  float maxProd = max(dot(N, L), 0.0);\n"
-                + "" //
-                + "  gl_FragColor = v_color * maxProd * u_intensity;\n" //
+                + "  float maxProd = (max(dot(N, L), 0.0) * Attenuation - 1.0) * alpha + 1.0;\n"
+                + "  gl_FragColor = "+gamma+"(v_color * maxProd * u_intensity);\n" //
                 + "}";
 
         ShaderProgram.pedantic = false;
