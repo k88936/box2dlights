@@ -148,8 +148,8 @@ public class DirectionalLight extends Light {
             mx[i] = end[i].x = steppedX + xAxelOffSet;
             my[i] = end[i].y = steppedY + yAxelOffSet;
 
-            if (rayHandler.world != null && !xray && !rayHandler.pseudo3d) {
-                Box2dPlus.b2WorldCastRayByOE(rayHandler.world, start[i], end[i], ray);
+            if (rayHandler.getWorld() != null && !xray && !rayHandler.pseudo3d) {
+                Box2dPlus.b2WorldCastRayByOE(rayHandler.getWorld(), start[i], end[i], ray);
             }
         }
 
@@ -209,7 +209,7 @@ public class DirectionalLight extends Light {
         aabb.upperBound().x(rayHandler.x2);
         aabb.lowerBound().y(rayHandler.y1);
         aabb.upperBound().y(rayHandler.y2);
-        Box2d.b2World_OverlapAABB(rayHandler.world, aabb, new b2QueryFilter(), dynamicShadowCallback, new VoidPointer(1));
+        Box2d.b2World_OverlapAABB(rayHandler.getWorld(), aabb, new b2QueryFilter(), dynamicShadowCallback, new VoidPointer(1));
 //		rayHandler.world.QueryAABB(
 //				dynamicShadowCallback,
 //				rayHandler.x1, rayHandler.y1,

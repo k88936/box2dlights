@@ -1,8 +1,6 @@
 package box2dLight;
 
 import com.badlogic.gdx.box2d.structs.*;
-import com.badlogic.gdx.box2d.enums.*;
-import com.badlogic.gdx.box2d.Box2d;
 import shaders.LightShader;
 
 import com.badlogic.gdx.Gdx;
@@ -108,8 +106,7 @@ public class RayHandler implements Disposable {
 	/** camera matrix corners */
 	float x1, x2, y1, y2;
 
-	b2WorldId world;
-	
+	private b2WorldId world;
 	/**
 	 * Class constructor specifying the physics world from where collision
 	 * geometry is taken.
@@ -128,6 +125,7 @@ public class RayHandler implements Disposable {
 	 * 
 	 * @see #RayHandler(b2WorldId, int, int, RayHandlerOptions)
 	 */
+
 	public RayHandler(b2WorldId world) {
 		this(world, Gdx.graphics.getWidth() / 4, Gdx.graphics
 				.getHeight() / 4, null);
@@ -149,7 +147,7 @@ public class RayHandler implements Disposable {
 	}
 
 	public RayHandler(b2WorldId world, int fboWidth, int fboHeight, RayHandlerOptions options) {
-		this.world = world;
+		this.setWorld(world);
 
 		if (options != null) {
 			isDiffuse = options.isDiffuse;
@@ -741,5 +739,9 @@ public class RayHandler implements Disposable {
 	 */
 	public FrameBuffer getLightMapBuffer() {
 		return lightMap.frameBuffer;
+	}
+
+	public b2WorldId getWorld() {
+		return world;
 	}
 }

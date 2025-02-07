@@ -143,7 +143,8 @@ public class Box2dLightCustomShaderTest extends InputAdapter implements Applicat
         rayHandler.setAmbientLight(0.3f, 0.3f, 0.1f, 0.5f);
         rayHandler.setBlurNum(0);
 
-        initPointLights();
+//        initPointLights();
+        new PointLight(rayHandler, 32, Color.WHITE, 24, 40, 8);
         /** BOX2D LIGHT STUFF END */
 
 

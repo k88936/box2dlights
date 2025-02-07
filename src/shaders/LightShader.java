@@ -6,7 +6,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 
 public final class LightShader {
-	static final public ShaderProgram createLightShader() {
+	static public ShaderProgram createLightShader() {
 		String gamma = ""; 
 		if (RayHandler.getGammaCorrection())
 			gamma = "sqrt";

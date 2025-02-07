@@ -27,11 +27,11 @@ ext {
 
 }
 
-version project.getProperty('version') + (isReleaseBuild() ? "" : "-SNAPSHOT")
+version project.getProperty('version')
 
 java {
-//    sourceCompatibility = 1.7
-//    targetCompatibility = 1.7
+    sourceCompatibility = 21
+    targetCompatibility = 21
 
     withJavadocJar()
     withSourcesJar()

@@ -1,5 +1,4 @@
 apply plugin: 'maven-publish'
-apply plugin: 'signing'
 
 publishing {
     publications {
@@ -49,20 +48,6 @@ publishing {
                 username = System.getenv("GITHUB_ACTOR")
                 password = System.getenv("GITHUB_TOKEN")
             }
-        }
-    }
-}
-
-signing {
-    useGpgCmd()
-    sign publishing.publications.mavenJava
-}
-
-//Simply using "required" in signing block doesn't work because taskGraph isn't ready yet.
-gradle.taskGraph.whenReady {
-    tasks.withType(Sign).tap {
-        configureEach {
-            onlyIf { isReleaseBuild() }
         }
     }
 }

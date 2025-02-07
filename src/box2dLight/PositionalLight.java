@@ -12,9 +12,6 @@ import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 
-import javax.sound.midi.Soundbank;
-import javax.swing.*;
-
 /**
  * Abstract base class for all positional lights
  *
@@ -236,10 +233,10 @@ public abstract class PositionalLight extends Light {
             mx[i] = tmpEnd.x;
             tmpEnd.y = endY[i] + start.y;
             my[i] = tmpEnd.y;
-            if (rayHandler.world != null && !xray && !rayHandler.pseudo3d) {
+            if (rayHandler.getWorld() != null && !xray && !rayHandler.pseudo3d) {
 
 
-                Box2dPlus.b2WorldCastRayByOE(rayHandler.world, start, tmpEnd,ray);
+                Box2dPlus.b2WorldCastRayByOE(rayHandler.getWorld(), start, tmpEnd,ray);
             }
         }
         setMesh();
@@ -247,7 +244,7 @@ public abstract class PositionalLight extends Light {
 
     protected void prepareFixtureData() {
 
-        Box2dPlus.b2WorldOverlapAABB(rayHandler.world, start.x - distance, start.y - distance,
+        Box2dPlus.b2WorldOverlapAABB(rayHandler.getWorld(), start.x - distance, start.y - distance,
                 start.x + distance, start.y + distance, dynamicShadowCallback);
     }
 

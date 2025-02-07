@@ -5,7 +5,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 
 public class DynamicShadowShader {
-	static final public ShaderProgram createShadowShader() {
+	static public ShaderProgram createShadowShader() {
 		final String vertexShader = "attribute vec4 a_position;\n" //
 				+ "attribute vec2 a_texCoord;\n" //
 				+ "varying vec2 v_texCoords;\n" //
