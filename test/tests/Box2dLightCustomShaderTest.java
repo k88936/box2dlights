@@ -20,7 +20,6 @@ import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
-import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import shaders.LightShaderWithNormal;
@@ -187,8 +186,8 @@ public class Box2dLightCustomShaderTest extends InputAdapter implements Applicat
             deferredObject.update();
         }
         normalFbo.begin();
-        ScreenUtils.clear(0,0,0,0);
-        batch.disableBlending();
+        Gdx.gl.glClearColor(0, 0, 0,  0);
+        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
         batch.begin();
         batch.setShader(normalShader);
         normalShader.setUniformf("u_rot", 1f,0);
