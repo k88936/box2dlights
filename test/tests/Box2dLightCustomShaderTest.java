@@ -1,5 +1,6 @@
 package tests;
 
+import batchs.NormalBatch;
 import box2dLight.*;
 import com.badlogic.gdx.ApplicationListener;
 import com.badlogic.gdx.Gdx;
@@ -44,7 +45,8 @@ public class Box2dLightCustomShaderTest extends InputAdapter implements Applicat
     private final static float MAX_TIME_PER_FRAME = TIME_STEP * MAX_STEPS;
     OrthographicCamera camera;
     Viewport viewport;
-    SpriteBatch batch;
+    SpriteBatch spriteBatch;
+    NormalBatch normalBatch;
     BitmapFont font;
     /** our box2D world **/
     b2WorldId world;
@@ -66,7 +68,6 @@ public class Box2dLightCustomShaderTest extends InputAdapter implements Applicat
     Array<DeferredObject> assetArray = new Array<DeferredObject>();
     DeferredObject marble;
     ShaderProgram lightShader;
-    ShaderProgram normalShader;
     boolean drawNormals = false;
     Color bgColor = new Color();
     float physicsTimeLeft;
@@ -101,7 +102,8 @@ public class Box2dLightCustomShaderTest extends InputAdapter implements Applicat
 
         viewport = new ExtendViewport(viewportWidth, viewportHeight, camera);
 
-        batch = new SpriteBatch();
+        normalBatch = new NormalBatch();
+        spriteBatch =new SpriteBatch();
         font = new BitmapFont();
         font.setColor(Color.RED);
 
@@ -121,7 +123,7 @@ public class Box2dLightCustomShaderTest extends InputAdapter implements Applicat
         normalProjection.setToOrtho2D(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 
         /** BOX2D LIGHT STUFF BEGIN */
-        normalShader = NormalShader.createNormalShader();
+//        normalShader = NormalShader.createNormalShader();
 
         lightShader = LightShaderWithNormal.createLightShader();
         RayHandlerOptions options = new RayHandlerOptions();
@@ -181,30 +183,26 @@ public class Box2dLightCustomShaderTest extends InputAdapter implements Applicat
         Gdx.gl.glClearColor(1f, 1f, 1f, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
-        batch.setProjectionMatrix(camera.combined);
+        normalBatch.setProjectionMatrix(camera.combined);
+        spriteBatch.setProjectionMatrix(camera.combined);
         for (DeferredObject deferredObject : assetArray) {
             deferredObject.update();
         }
         normalFbo.begin();
         Gdx.gl.glClearColor(0, 0, 0,  0);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-        batch.begin();
-        batch.setShader(normalShader);
-        normalShader.setUniformf("u_rot", 1f,0);
+        normalBatch.begin();
         float bgWidth = bgN.getWidth() * SCALE;
         float bgHeight = bgN.getHeight() * SCALE;
         for (int x = 0; x < 6; x++) {
             for (int y = 0; y < 6; y++) {
-                batch.draw(bgN, x * bgWidth, y * bgHeight, bgWidth, bgHeight);
+                normalBatch.draw(bgN, x * bgWidth, y * bgHeight, bgWidth, bgHeight);
             }
         }
-        batch.enableBlending();
+        normalBatch.enableBlending();
         for (DeferredObject deferredObject : assetArray) {
-            normalShader.setUniformf("u_rot", MathUtils.cosDeg(deferredObject.rotation),MathUtils.sinDeg(deferredObject.rotation));
-            deferredObject.drawNormal(batch);
+            deferredObject.drawNormal(normalBatch);
             // flush batch or uniform wont change
-            // TODO this is baaaad, maybe modify SpriteBatch to add rotation in the attributes? Flushing after each defeats the point of batch
-            batch.flush();
         }
         for (int i = 0; i < BALLSNUM; i++) {
             b2BodyId ball = balls.get(i);
@@ -214,22 +212,18 @@ public class Box2dLightCustomShaderTest extends InputAdapter implements Applicat
             marble.x = position.x - RADIUS;
             marble.y = position.y - RADIUS;
             marble.rotation = angle;
-            normalShader.setUniformf("u_rot", MathUtils.degreesToRadians * marble.rotation);
-            marble.drawNormal(batch);
-            // TODO same as above
-            batch.flush();
+            marble.drawNormal(normalBatch);
         }
-        batch.end();
+        normalBatch.end();
         normalFbo.end();
 
         Texture normals = normalFbo.getColorBufferTexture();
 
-        batch.disableBlending();
-        batch.begin();
-        batch.setShader(null);
+        spriteBatch.disableBlending();
+        spriteBatch.begin();
         if (drawNormals) {
             // draw flipped so it looks ok
-            batch.draw(normals, 0, 0, // x, y
+            spriteBatch.draw(normals, 0, 0, // x, y
                     viewportWidth / 2, viewportHeight / 2, // origx, origy
                     viewportWidth, viewportHeight, // width, height
                     1, 1, // scale x, y
@@ -239,14 +233,14 @@ public class Box2dLightCustomShaderTest extends InputAdapter implements Applicat
         } else {
             for (int x = 0; x < 6; x++) {
                 for (int y = 0; y < 6; y++) {
-                    batch.setColor(bgColor.set(x / 5.0f, y / 6.0f, 0.5f, 1));
-                    batch.draw(bg, x * bgWidth, y * bgHeight, bgWidth, bgHeight);
+                    spriteBatch.setColor(bgColor.set(x / 5.0f, y / 6.0f, 0.5f, 1));
+                    spriteBatch.draw(bg, x * bgWidth, y * bgHeight, bgWidth, bgHeight);
                 }
             }
-            batch.setColor(Color.WHITE);
-            batch.enableBlending();
+            spriteBatch.setColor(Color.WHITE);
+            spriteBatch.enableBlending();
             for (DeferredObject deferredObject : assetArray) {
-                deferredObject.draw(batch);
+                deferredObject.draw(spriteBatch);
             }
             for (int i = 0; i < BALLSNUM; i++) {
                 b2BodyId ball = balls.get(i);
@@ -256,10 +250,10 @@ public class Box2dLightCustomShaderTest extends InputAdapter implements Applicat
                 marble.x = position.x - RADIUS;
                 marble.y = position.y - RADIUS;
                 marble.rotation = angle;
-                marble.draw(batch);
+                marble.draw(spriteBatch);
             }
         }
-        batch.end();
+        spriteBatch.end();
 
         /** BOX2D LIGHT STUFF BEGIN */
         if (!drawNormals) {
@@ -277,17 +271,17 @@ public class Box2dLightCustomShaderTest extends InputAdapter implements Applicat
         aika += System.nanoTime() - time;
 
         /** FONT */
-        batch.setProjectionMatrix(normalProjection);
-        batch.begin();
+        spriteBatch.setProjectionMatrix(normalProjection);
+        spriteBatch.begin();
 
 
-        font.draw(batch,
+        font.draw(spriteBatch,
                 Integer.toString(Gdx.graphics.getFramesPerSecond())
                         + "mouse at shadows: " + atShadow
                         + " time used for shadow calculation:"
                         + aika / ++times + "ns", 0, 20);
 
-        batch.end();
+        spriteBatch.end();
     }
 
     @Override
