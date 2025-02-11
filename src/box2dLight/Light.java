@@ -77,7 +77,7 @@ public abstract class Light implements Disposable {
      **/
     private b2Filter filterA = null;
 
-    final ClosureObject<Box2d.b2CastResultFcn> ray =ClosureObject.fromClosure(new Box2d.b2CastResultFcn() {
+    final Box2d.b2CastResultFcn ray =new Box2d.b2CastResultFcn() {
 
         @Override
         public float b2CastResultFcn_call(b2ShapeId shapeId, b2Vec2 point, b2Vec2 normal, float fraction, VoidPointer context) {
@@ -99,8 +99,8 @@ public abstract class Light implements Disposable {
             f[m_index] = fraction;
             return fraction;
         }
-    });
-    final ClosureObject<Box2d.b2OverlapResultFcn> dynamicShadowCallback =ClosureObject.fromClosure( new Box2d.b2OverlapResultFcn() {
+    };
+    final Box2d.b2OverlapResultFcn dynamicShadowCallback = new Box2d.b2OverlapResultFcn() {
 
         @Override
         public boolean b2OverlapResultFcn_call(b2ShapeId shapeId, VoidPointer context) {
@@ -116,7 +116,7 @@ public abstract class Light implements Disposable {
             return true;
         }
 
-    });
+    };
 
     /**
      * Creates new active light and automatically adds it to the specified

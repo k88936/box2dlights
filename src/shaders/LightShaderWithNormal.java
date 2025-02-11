@@ -11,7 +11,6 @@ public final class LightShaderWithNormal {
         if (RayHandler.getGammaCorrection())
             gamma = "sqrt";
         final String vertexShader =
-                "#version 330 core\n" +
                         "attribute vec4 vertex_positions;\n" //
                         + "attribute vec4 quad_colors;\n" //
                         + "attribute float s;\n"
@@ -22,7 +21,7 @@ public final class LightShaderWithNormal {
                         + "   v_color = s * quad_colors;\n" //
                         + "   gl_Position =  u_projTrans * vertex_positions;\n" //
                         + "}\n";
-        final String fragmentShader = "#version 330 core\n" +
+        final String fragmentShader =
                 "#ifdef GL_ES\n" //
                 + "precision lowp float;\n" //
                 + "#define MED mediump\n"
@@ -34,7 +33,7 @@ public final class LightShaderWithNormal {
                 + "uniform vec3 u_lightpos;\n" //
                 + "uniform vec2 u_resolution;\n" //
                 + "uniform float u_intensity = 1.0;\n" //
-             + "uniform vec3 u_falloff;"
+                + "uniform vec3 u_falloff;"
                 + "void main()\n"//
                 + "{\n" //
                 + "  vec2 screenPos = gl_FragCoord.xy / u_resolution.xy;\n"
@@ -56,8 +55,12 @@ public final class LightShaderWithNormal {
         ShaderProgram.pedantic = false;
         ShaderProgram lightShader = new ShaderProgram(vertexShader,
                 fragmentShader);
-        if (!lightShader.isCompiled()) {
-            Gdx.app.log("ERROR", lightShader.getLog());
+      if (!lightShader.isCompiled()) {
+            lightShader = new ShaderProgram("#version 330 core\n" +vertexShader,
+                    "#version 330 core\n" +fragmentShader);
+            if(!lightShader.isCompiled()){
+                Gdx.app.log("ERROR", lightShader.getLog());
+            }
         }
 
         lightShader.bind();

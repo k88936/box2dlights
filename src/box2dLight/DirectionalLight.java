@@ -205,11 +205,7 @@ public class DirectionalLight extends Light {
 
     protected void prepareFixtureData() {
         b2AABB aabb = new b2AABB();
-        aabb.lowerBound().x(rayHandler.x1);
-        aabb.upperBound().x(rayHandler.x2);
-        aabb.lowerBound().y(rayHandler.y1);
-        aabb.upperBound().y(rayHandler.y2);
-        Box2d.b2World_OverlapAABB(rayHandler.getWorld(), aabb, new b2QueryFilter(), dynamicShadowCallback, new VoidPointer(1));
+        Box2dPlus.b2WorldOverlapAABB(rayHandler.getWorld(),rayHandler.x1,rayHandler.y1,rayHandler.x2,rayHandler.y2,dynamicShadowCallback);
 //		rayHandler.world.QueryAABB(
 //				dynamicShadowCallback,
 //				rayHandler.x1, rayHandler.y1,
