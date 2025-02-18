@@ -132,8 +132,8 @@ class LightMap {
 				buffer.end(
 					rayHandler.viewportX,
 					rayHandler.viewportY,
-					rayHandler.viewportWidth,
-					rayHandler.viewportHeight);
+						rayHandler.getViewportWidth(),
+						rayHandler.getViewportHeight());
 			} else {
 				buffer.end();
 			}

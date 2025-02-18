@@ -32,7 +32,8 @@ public final class LightShaderWithNormal {
                 + "uniform sampler2D u_normals;\n" //
                 + "uniform vec3 u_lightpos;\n" //
                 + "uniform vec2 u_resolution;\n" //
-                + "uniform float u_intensity = 1.0;\n" //
+                + "uniform vec2 u_world;\n" //
+                + "uniform float u_intensity;\n" //
                 + "uniform vec3 u_falloff;"
                 + "void main()\n"//
                 + "{\n" //
@@ -41,14 +42,15 @@ public final class LightShaderWithNormal {
                 + "  vec3 NormalMap = NormalMapTexture.rgb;\n"
                 + "  float alpha = NormalMapTexture.a;\n"
                 + "  vec3 LightDir = vec3(u_lightpos.xy - screenPos, u_lightpos.z);\n"
-
-                + "  LightDir.x *= u_resolution.x / u_resolution.y;\n"
+                + "  LightDir.xy *= u_world.xy;\n"
                 + "  float D = length(LightDir);\n"
                 + "  float Attenuation = 1.0 / (u_falloff.x + (u_falloff.y*D) + (u_falloff.z*D*D));\n"
-
                 + "  vec3 N = normalize(NormalMap * 2.0 - 1.0);\n"
                 + "  vec3 L = normalize(LightDir);\n"
                 + "  float maxProd = (max(dot(N, L), 0.0) * Attenuation - 1.0) * alpha + 1.0;\n"
+//                + "  gl_FragColor = NormalMapTexture;\n" //
+//                        +"  gl_FragColor = vec4(screenPos.x,screenPos.y,1,1);\n" //
+//                        +"  gl_FragColor = vec4(screenPos.y,screenPos.y,screenPos.y,1);\n" //
                 + "  gl_FragColor = "+gamma+"(v_color * maxProd * u_intensity);\n" //
                 + "}";
 
@@ -63,9 +65,9 @@ public final class LightShaderWithNormal {
             }
         }
 
-        lightShader.bind();
-        lightShader.setUniformi("u_normals", 1);
-        lightShader.setUniformf("u_resolution", Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+//        lightShader.bind();
+//        lightShader.setUniformi("u_normals", 1);
+//        lightShader.setUniformf("u_resolution", Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 
         return lightShader;
     }
