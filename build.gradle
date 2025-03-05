@@ -55,6 +55,9 @@ repositories {
     }
 
 }
+configurations.configureEach {
+    resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
+}
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
