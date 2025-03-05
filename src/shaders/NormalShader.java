@@ -5,7 +5,9 @@ import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 
 public final class NormalShader {
     public static ShaderProgram createNormalShader() {
-        String vertexShader = "attribute vec4 " + ShaderProgram.POSITION_ATTRIBUTE + ";\n" //
+        String vertexShader =
+                "#version 330 core\n"+
+                        "attribute vec4 " + ShaderProgram.POSITION_ATTRIBUTE + ";\n" //
                 + "attribute vec4 " + ShaderProgram.COLOR_ATTRIBUTE + ";\n" //
                 + "attribute vec2 " + ShaderProgram.TEXCOORD_ATTRIBUTE + "0;\n" //
                 + "attribute vec2 " + ShaderProgram.BINORMAL_ATTRIBUTE + ";\n" //
@@ -25,7 +27,8 @@ public final class NormalShader {
                 + "   v_texCoords = " + ShaderProgram.TEXCOORD_ATTRIBUTE + "0;\n" //
                 + "   gl_Position =  u_projTrans * " + ShaderProgram.POSITION_ATTRIBUTE + ";\n" //
                 + "}\n";
-        String fragmentShader = "#ifdef GL_ES\n" //
+        String fragmentShader =				"#version 330 core\n"+
+                "#ifdef GL_ES\n" //
                 + "#define LOWP lowp\n" //
                 + "precision mediump float;\n" //
                 + "#else\n" //
@@ -47,11 +50,7 @@ public final class NormalShader {
 
         ShaderProgram shader = new ShaderProgram(vertexShader, fragmentShader);
         if (!shader.isCompiled()) {
-            shader = new ShaderProgram("#version 330 core\n" + vertexShader,
-                    "#version 330 core\n" + fragmentShader);
-            if (!shader.isCompiled()) {
                 Gdx.app.log("ERROR", shader.getLog());
-            }
         }
         return shader;
     }

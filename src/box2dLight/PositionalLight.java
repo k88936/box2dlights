@@ -27,10 +27,10 @@ public abstract class PositionalLight extends Light {
     protected float bodyOffsetX;
     protected float bodyOffsetY;
     protected float bodyAngleOffset;
-    protected float sin[];
-    protected float cos[];
-    protected float endX[];
-    protected float endY[];
+    protected float[] sin;
+    protected float[] cos;
+    protected float[] endX;
+    protected float[] endY;
     Color tmpColor = new Color();
 
     /**

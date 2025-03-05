@@ -6,7 +6,9 @@ import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 
 public class DynamicShadowShader {
 	static public ShaderProgram createShadowShader() {
-		final String vertexShader = "attribute vec4 a_position;\n" //
+		final String vertexShader =
+				"#version 330 core\n"+
+				"attribute vec4 a_position;\n" //
 				+ "attribute vec2 a_texCoord;\n" //
 				+ "varying vec2 v_texCoords;\n" //
 				+ "\n" //
@@ -17,7 +19,9 @@ public class DynamicShadowShader {
 				+ "}\n";
 
 		// this is always perfect precision
-		final String fragmentShader = "#ifdef GL_ES\n" //
+		final String fragmentShader =
+				"#version 330 core\n"+
+				"#ifdef GL_ES\n" //
 				+ "precision lowp float;\n" //
 				+ "#define MED mediump\n"
 				+ "#else\n"
@@ -49,11 +53,7 @@ public class DynamicShadowShader {
 		ShaderProgram shadowShader = new ShaderProgram(vertexShader,
 				fragmentShader);
 		if (!shadowShader.isCompiled()) {
-			shadowShader = new ShaderProgram("#version 330 core\n" +vertexShader,
-					"#version 330 core\n" +fragmentShader);
-			if(!shadowShader.isCompiled()){
 				Gdx.app.log("ERROR", shadowShader.getLog());
-			}
 		}
 
 		return shadowShader;
