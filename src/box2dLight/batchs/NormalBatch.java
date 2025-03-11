@@ -14,8 +14,9 @@
  * limitations under the License.
  ******************************************************************************/
 
-package batchs;
+package box2dLight.batchs;
 
+import box2dLight.Utils;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.Mesh.VertexDataType;
@@ -26,7 +27,6 @@ import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.math.Affine2;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Matrix4;
-import shaders.NormalShader;
 
 import java.nio.Buffer;
 
@@ -83,7 +83,7 @@ public class NormalBatch implements Batch {
 
         projectionMatrix.setToOrtho2D(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 
-        vertices = new float[size * (4*(2+1+2+2))];
+        vertices = new float[size * (4 * (2 + 1 + 2 + 2))];
 
         int len = size * 6;
         short[] indices = new short[len];
@@ -98,7 +98,7 @@ public class NormalBatch implements Batch {
         }
         mesh.setIndices(indices);
 
-        shader = NormalShader.createNormalShader();
+        shader = Utils.compileShader(Gdx.files.classpath("box2dLight/shaders/normal_shader.vert"), Gdx.files.classpath("box2dLight/shaders/normal_shader.frag"));
         ownsShader = true;
 
         // Pre bind the mesh to force the upload of indices data.
@@ -187,7 +187,7 @@ public class NormalBatch implements Batch {
     }
 
     @Override
-    public void draw (Texture texture, float x, float y, float width, float height) {
+    public void draw(Texture texture, float x, float y, float width, float height) {
         if (!drawing) throw new IllegalStateException("SpriteBatch.begin must be called before draw.");
 
         float[] vertices = this.vertices;
@@ -240,7 +240,6 @@ public class NormalBatch implements Batch {
         vertices[idx + 26] = u2;
         vertices[idx + 27] = v;
         this.idx = idx + 28;
-
 
 
     }

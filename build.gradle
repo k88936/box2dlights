@@ -8,7 +8,7 @@ sourceSets {
             srcDirs = ["src"]
         }
         resources {
-            srcDirs = ["res"]
+            srcDirs = ["assets"]
         }
     }
     test {
@@ -37,6 +37,12 @@ java {
     withSourcesJar()
 }
 
+jar {
+    from('assets') {
+        include '**/*'
+    }
+    duplicatesStrategy(DuplicatesStrategy.EXCLUDE)
+}
 repositories {
     mavenLocal()
     mavenCentral()
@@ -54,9 +60,6 @@ repositories {
         }
     }
 
-}
-configurations.configureEach {
-    resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
 }
 
 tasks.withType(JavaCompile).configureEach {
@@ -82,6 +85,8 @@ tasks.withType(JavaCompile).configureEach {
 tasks.withType(Test).configureEach {
     systemProperty 'file.encoding', 'UTF-8'
 }
-
+configurations.configureEach {
+    resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
+}
 
 apply from: rootProject.file('publish.gradle')
